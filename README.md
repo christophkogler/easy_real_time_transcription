@@ -1,34 +1,24 @@
-# Real Time Whisper Transcription
+# Easy [Real Time Whisper Transcription](https://github.com/davabase/whisper_real_time)
 
-![Demo gif](demo.gif)
+This repository is meant to make using the Real Time Whisper Transcription repo easier by providing a simple installation method for all of its requirements as well as CUDA accelerated PyTorch. 
 
-This is a demo of real time speech to text with OpenAI's Whisper model. It works by constantly recording audio in a thread and concatenating the raw bytes over multiple recordings.
+It also includes some minor script improvements:
+- Implements [`faster-whisper`](https://github.com/SYSTRAN/faster-whisper) to reduce transcription delay further
+- Minor adjustment to script logic to make the transcription better
+- Transcription log saving
 
-To install dependencies simply run
+### Conda Torch environments are quite large. 
+The virtual environment and Whisper model together is over 10GB!
+
+To install the dependencies, install Anaconda and create an isolated Conda environment with 
 ```
-pip install -r requirements.txt
+conda env create -p <env path> --file <environment.yml path>
+``` 
+Then, activate the environment with 
 ```
-in an environment of your choosing.
-
-Whisper also requires the command-line tool [`ffmpeg`](https://ffmpeg.org/) to be installed on your system, which is available from most package managers:
-
-```
-# on Ubuntu or Debian
-sudo apt update && sudo apt install ffmpeg
-
-# on Arch Linux
-sudo pacman -S ffmpeg
-
-# on MacOS using Homebrew (https://brew.sh/)
-brew install ffmpeg
-
-# on Windows using Chocolatey (https://chocolatey.org/)
-choco install ffmpeg
-
-# on Windows using Scoop (https://scoop.sh/)
-scoop install ffmpeg
+conda activate <env path>
 ```
 
-For more information on Whisper please see https://github.com/openai/whisper
-
-The code in this repository is public domain.
+Now you should be able to execute `python transcribe_demo.py` and have real-time transcription!
+>On first run, the script will download the Whisper model to the script's directory.
+>Whisper 'medium' is the default; it is ~1.5GB on disk and needs ~4GB of VRAM to run.
