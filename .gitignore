@@ -1,3 +1,4 @@
 venv
 medium.en.pt
 output*
+__pycache__

@@ -18,11 +18,11 @@ def main():
                         choices=["tiny", "base", "small", "medium", "large"])#medium is ~1.5gb on disk and uses ~4gb of vram
     parser.add_argument("--non_english", action='store_true',
                         help="Don't use the english model.")
-    parser.add_argument("--energy_threshold", default=2000,
+    parser.add_argument("--energy_threshold", default=1000,
                         help="Energy level for mic to detect.", type=int)
     parser.add_argument("--record_timeout", default=1,
                         help="How real time the recording is in seconds.", type=float)
-    parser.add_argument("--phrase_timeout", default=1,
+    parser.add_argument("--phrase_timeout", default=3,
                         help="How much empty space between recordings before we "
                              "consider it a new line in the transcription.", type=float)
     parser.add_argument("--output", default=True, help="Output transcription as text file?", type=bool) 
@@ -56,19 +56,19 @@ def main():
             print("Available microphone devices are: ")
             for index, name in enumerate(sr.Microphone.list_microphone_names()): # Enumerate through the list of microphones and for each,
                 print(f"Microphone with name \"{name}\" found") # print their names.
-			return # exit early to prevent hang
+            return # exit early to prevent hang
         else: # user entered a microphone name
-			found_microphone = False # Assume they didnt enter a valid name, until we find a match
+            found_microphone = False # Assume they didnt enter a valid name, until we find a match
             for index, name in enumerate(sr.Microphone.list_microphone_names()): # Iterate over all available microphone devices and for each,
                 if mic_name in name: #  check if it matches the specified name.
                     source = sr.Microphone(sample_rate=16000, device_index=index)
-					found_microphone = True
+                    found_microphone = True
                     break # break out of for() loop
-			if not found_microphone: # if they didnt input a valid name
+            if not found_microphone: # if they didnt input a valid name
                 print(f"Microphone with name \"{mic_name}\" not found, please enter a name from the following:") # inform user of error
                 for index, name in enumerate(sr.Microphone.list_microphone_names()): # Enumerate through the list of microphones and for each,
                     print(f"Microphone with name \"{name}\" found") # print their names.
-				return # exit early to prevent hang
+                return # exit early to prevent hang
     else:
         source = sr.Microphone(sample_rate=16000)
 
@@ -120,7 +120,11 @@ def main():
     start_date_time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S") # for logging
 	
     print("Beginning transcription.\n")
-	
+
+    if output_file_path: # If output is enabled
+        output_file = open(output_file_path, 'a') # Open the file in append mode
+        output_file.write(start_date_time + '\n') # Add date&time for easy searching
+
     while True:
         try:
             now = datetime.now() # get current time for the loop
@@ -148,7 +152,8 @@ def main():
                 text = ''.join(segment.text for segment in segments).strip()	# Concat the text and clean any trailing/leading whitespace(s)
                 
                 if phrase_complete: 			# If we detected a pause between recordings
-                    transcription.append(text) 		# add a new item to our transcription.
+                    output_file.write(transcription[-1] + '\n')	# Write completed phrase to output file
+                    transcription.append(text) 		# Begin working on a new item for our transcription.
                 else: 							# Otherwise
                     transcription[-1] = text 		# edit the last one.
 
@@ -161,15 +166,8 @@ def main():
         except KeyboardInterrupt: # If we get a keyboard interrupt
             break # Break the infinite loop
 	
-    if output_file_path: # If output is enabled
-        output_file = open(output_file_path, 'a') # Open the file in append mode
-        output_file.write(start_date_time + '\n') # Add date&time for easy searching
-        for line in transcription:
-            output_file.write(line + '\n')	# Write transcription to output file, line by line
-        print(f"\n\nTranscription saved to {output_file_path}")
-        for _ in range(5):
-            output_file.write('\n') # write 5 newlines after log
-        output_file.close() #close output file
+    output_file.write('\n') # write 5 newlines after log
+    output_file.close() #close output file
 		
     print("\n\nTranscription:")
 	
