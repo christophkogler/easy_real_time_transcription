@@ -30,11 +30,11 @@ Building the GUI script to an executable can make it much more portable and user
 ### Compilation steps:
 [Pyinstaller](https://pyinstaller.org/en/stable/) allows easy compilation from a Python script to a packaged, standalone executable for an OS:
 1) Install pyinstaller to your Conda environment, via `conda install -c conda-forge pyinstaller` (when the environment is active).
-> Running pyinstaller on a script should produce two folders named `build` and `dist` in your working directory, each containing a folder named after the script.  
-> `dist\transcribe_gui` is the directory our working executable will be compiled to.
 2) Run pyinstaller on the 'transcribe_gui.py' script, ensuring it includes necessary DLLs for CUDA acceleration (which it would otherwise miss), via
 ```
 pyinstaller transcribe_gui.py -D --add-data <venv_path>\Library\bin\cudnn_cnn_infer64_8.dll:. --add-data <venv_path>\Library\bin\cudnn_ops_infer64_8.dll:.
 ```
-> Make sure you fill in your virtual environment's path!
+> Make sure you fill in your virtual environment's path!  
+> Running pyinstaller on a script will produce two folders named `build` and `dist` in your working directory, each containing a folder named after the script.  
+> `dist\transcribe_gui` is the directory the functional executable and its dependency folder will be compiled to.  
 3) Run your executable, and test out the real time transcription!
