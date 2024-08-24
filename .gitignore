@@ -2,3 +2,6 @@ venv
 medium.en.pt
 output*
 __pycache__
+build
+dist
+*.spec
