@@ -15,6 +15,19 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 from tkinter import ttk
 
+LANGUAGES = {
+    "en": "english",
+    "zh": "chinese",
+    "de": "german",
+    "es": "spanish",
+    "ru": "russian",
+    "ko": "korean",
+    "fr": "french",
+    "ja": "japanese",
+    "pt": "portuguese",
+    # Add more languages as needed... any on https://github.com/openai/whisper/blob/main/whisper/tokenizer.py.
+}
+
 class TranscriptionApp:
     def __init__(self, root):
         self.root = root
@@ -59,41 +72,47 @@ class TranscriptionApp:
         model_options = ["tiny", "base", "small", "medium", "large"]
         tk.OptionMenu(self.options_frame, self.model_var, *model_options).grid(row=0, column=1, sticky="ew")
 
-        # Non-English model option
-        self.non_english_var = tk.BooleanVar()
-        tk.Checkbutton(self.options_frame, text="Non-English Model", variable=self.non_english_var).grid(row=1, column=0, columnspan=2, sticky="ew")
-
         # Energy threshold
-        tk.Label(self.options_frame, text="Energy Threshold").grid(row=2, column=0, sticky="ew")
+        tk.Label(self.options_frame, text="Energy Threshold").grid(row=1, column=0, sticky="ew")
         self.energy_threshold_var = tk.IntVar(value=1000)
-        tk.Entry(self.options_frame, textvariable=self.energy_threshold_var).grid(row=2, column=1, sticky="ew")
+        tk.Entry(self.options_frame, textvariable=self.energy_threshold_var).grid(row=1, column=1, sticky="ew")
 
         # Record timeout
-        tk.Label(self.options_frame, text="Record Timeout (s)").grid(row=3, column=0, sticky="ew")
+        tk.Label(self.options_frame, text="Record Timeout (s)").grid(row=2, column=0, sticky="ew")
         self.record_timeout_var = tk.DoubleVar(value=1.0)
-        tk.Entry(self.options_frame, textvariable=self.record_timeout_var).grid(row=3, column=1, sticky="ew")
+        tk.Entry(self.options_frame, textvariable=self.record_timeout_var).grid(row=2, column=1, sticky="ew")
 
         # Phrase timeout
-        tk.Label(self.options_frame, text="Phrase Timeout (s)").grid(row=4, column=0, sticky="ew")
+        tk.Label(self.options_frame, text="Phrase Timeout (s)").grid(row=3, column=0, sticky="ew")
         self.phrase_timeout_var = tk.DoubleVar(value=3.0)
-        tk.Entry(self.options_frame, textvariable=self.phrase_timeout_var).grid(row=4, column=1, sticky="ew")
+        tk.Entry(self.options_frame, textvariable=self.phrase_timeout_var).grid(row=3, column=1, sticky="ew")
 
         # Output option
         self.output_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(self.options_frame, text="Output Transcription to Text File", variable=self.output_var).grid(row=5, column=0, columnspan=2, sticky="ew")
+        tk.Checkbutton(self.options_frame, text="Output Transcription to Text File", variable=self.output_var).grid(row=4, column=0, columnspan=2, sticky="ew")
 
         # Output path
-        tk.Label(self.options_frame, text="Output Path").grid(row=6, column=0, sticky="ew")
+        tk.Label(self.options_frame, text="Output Path").grid(row=4, column=0, sticky="ew")
         executing_script_folder = os.path.dirname(os.path.abspath(sys.modules['__main__'].__file__))
         self.output_path_var = tk.StringVar(value=os.path.join(executing_script_folder, "output.txt"))
-        tk.Entry(self.options_frame, textvariable=self.output_path_var).grid(row=6, column=1, sticky="ew")
-        tk.Button(self.options_frame, text="Browse", command=self.browse_output_path).grid(row=6, column=2, sticky="ew")
+        tk.Entry(self.options_frame, textvariable=self.output_path_var).grid(row=4, column=1, sticky="ew")
+        tk.Button(self.options_frame, text="Browse", command=self.browse_output_path).grid(row=4, column=2, sticky="ew")
 
         # Model directory
-        tk.Label(self.options_frame, text="Model Directory").grid(row=7, column=0, sticky="ew")
+        tk.Label(self.options_frame, text="Model Directory").grid(row=5, column=0, sticky="ew")
         self.model_dir_var = tk.StringVar(value=executing_script_folder)
-        tk.Entry(self.options_frame, textvariable=self.model_dir_var).grid(row=7, column=1, sticky="ew")
-        tk.Button(self.options_frame, text="Browse", command=self.browse_model_dir).grid(row=7, column=2, sticky="ew")
+        tk.Entry(self.options_frame, textvariable=self.model_dir_var).grid(row=5, column=1, sticky="ew")
+        tk.Button(self.options_frame, text="Browse", command=self.browse_model_dir).grid(row=5, column=2, sticky="ew")
+
+        # Translate option
+        self.do_translation = tk.BooleanVar()
+        tk.Checkbutton(self.options_frame, text="Translating and transcribing from different language?", variable=self.do_translation).grid(row=6, column=0, columnspan=2, sticky="ew")
+
+        # Language selection dropdown
+        tk.Label(self.options_frame, text="Select spoken language").grid(row=7, column=0, sticky="ew")
+        self.translate_from = tk.StringVar(value="english")
+        language_options = {value: key for key, value in LANGUAGES.items()}
+        tk.OptionMenu(self.options_frame, self.translate_from, *language_options).grid(row=7, column=1, sticky="ew")
 
         # Default microphone (only for Linux)
         if 'linux' in platform:
@@ -171,7 +190,7 @@ class TranscriptionApp:
             source = sr.Microphone(sample_rate=16000)
 
         model = self.model_var.get()
-        if model != "large" and not self.non_english_var.get():
+        if model != "large" and not self.do_translation.get():
             model = model + ".en"
         if self.model_dir_var.get():
             audio_model = whisper.load_model(model, download_root=self.model_dir_var.get()).to(device)
@@ -227,8 +246,18 @@ class TranscriptionApp:
 
                     audio_np = numpy.frombuffer(audio_data, dtype=numpy.int16).astype(numpy.float32) / 32768.0
 
-                    segments, info = audio_model.transcribe(audio_np, beam_size=12)
-                    text = ''.join(segment.text for segment in segments).strip()
+					#create a list from languages.keys and select the same index where translate_from is located in the list made from languages.values
+                    selected_language_key = list(LANGUAGES.keys())[list(LANGUAGES.values()).index(self.translate_from.get())]
+
+                    if self.do_translation.get(): # Attempt to translate to english and transcribe
+                        segments, info = audio_model.transcribe(audio_np, beam_size=12, task="translate", language = selected_language_key)
+                        detected_language = info.language
+                        if detected_language != selected_language_key:
+                            print(f"Attempting to translate from {self.translate_from.get()} but detected language is {detected_language}, quality may be degraded.")
+                        text = ''.join(segment.text for segment in segments).strip()
+                    else: # Attempt english transcription
+                        segments, info = audio_model.transcribe(audio_np, beam_size=12)
+                        text = ''.join(segment.text for segment in segments).strip()
 
                     if phrase_complete:
                         if output_file_path:

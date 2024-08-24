@@ -1,5 +1,5 @@
 venv
-medium.en.pt
+*.pt
 output*
 __pycache__
 build
