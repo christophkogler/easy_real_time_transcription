@@ -19,6 +19,19 @@ Then, activate the environment with
 conda activate <env path>
 ```
 
-Now you should be able to execute `python transcribe_demo.py` and have real-time transcription!
->On first run, the script will download the Whisper model to the script's directory.
+Now you should be able to execute `python transcribe_demo.py` or `python transcribe_gui.py`and have real-time transcription!
+>On first transcription run, the script will download the Whisper model to the script's directory.
 >Whisper 'medium' is the default; it is ~1.5GB on disk and needs ~4GB of VRAM to run.
+
+# Building to an executable
+Building the GUI script to an executable can make it much more portable and user friendly, as well as slightly smaller at ~7GB (w/ medium Whisper model).
+
+To convert this from a Python script into a packaged and portable standalone executable, follow these steps after creation of the conda environment:
+1) Install ['pyinstaller'](https://pyinstaller.org/en/stable/) to your Conda environment, via `conda install -c conda-forge pyinstaller` (when the environment is active).
+> Running pyinstaller on a script should produce two folders named `build` and `dist` in your working directory, each containing a folder named after the script.  
+> `dist\transcribe_gui` is the directory we compile into, in this case.
+2) Run pyinstaller on the 'transcribe_gui.py' script, ensuring it includes necessary DLLs for CUDA acceleration (which it would otherwise miss), via
+```
+pyinstaller transcribe_gui.py -D --add-data <venv_path>\Library\bin\cudnn_cnn_infer64_8.dll:. --add-data <venv_path>\Library\bin\cudnn_ops_infer64_8.dll:.
+```
+3) Run your executable, and test out the real time transcription!
