@@ -25,7 +25,7 @@ Now you should be able to execute `python transcribe_demo.py` or `python transcr
   >Whisper 'medium' is the default; it is ~1.5GB on disk and needs ~4GB of VRAM to run.
 
 # Building to an executable
-Building the GUI script to an executable can make it much more portable and user friendly by removing the need for a Python environment, as well as making it slightly smaller at ~7GB (w/ medium Whisper model).
+Building the GUI script to an executable instead of a command-line activated tool can make it significantly more portable and user friendly by removing the need for a Python (virtual) environment, as well as making it slightly smaller at ~7GB (w/ medium Whisper model).
 
 ### Compilation steps:
 [Pyinstaller](https://pyinstaller.org/en/stable/) allows easy compilation from a Python script to a packaged, standalone executable for an OS:
